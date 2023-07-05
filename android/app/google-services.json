@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "14631629332",
+    "project_id": "helmet-detection-bac76",
+    "storage_bucket": "helmet-detection-bac76.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:14631629332:android:ac41bbe482252aefcbed01",
+        "android_client_info": {
+          "package_name": "com.example.detection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "14631629332-1mbefbaope3u52u6gcel9g2is18p1tqq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ8exGkKENKUgqoGWhzxPStfUW_mHkMVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "14631629332-1mbefbaope3u52u6gcel9g2is18p1tqq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
