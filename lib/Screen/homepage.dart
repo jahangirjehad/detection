@@ -11,6 +11,8 @@ import 'dart:io';
 import 'package:path/path.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   //final List<CameraDescription>? cameras;
 
   @override
@@ -28,8 +30,8 @@ class _HomePageState extends State<HomePage> {
   File? _photo;
   final ImagePicker _picker = ImagePicker();
   File? _pickedImage;
-  var imgDownload;
-  var label;
+  dynamic imgDownload;
+  dynamic label;
   //var late urlDownload;
 
   static UploadTask? uploadBytes(String destination, Uint8List data) {
@@ -132,7 +134,7 @@ class _HomePageState extends State<HomePage> {
     await Tflite.loadModel(
       labels: "assets/labels.txt",
       model: "assets/model_unquant.tflite",
-      numThreads: 1,
+      numThreads: 2,
     );
   }
 
@@ -141,14 +143,14 @@ class _HomePageState extends State<HomePage> {
         path: image!.path,
         imageMean: 0.0,
         imageStd: 255.0,
-        numResults: 2,
+        numResults: 5,
         threshold: 0.2,
         asynch: true);
     setState(() {
       _loading = false;
       _outputs = output;
       print("output\n");
-      print(_outputs![0]['label']);
+      //print(_outputs![0]['label']);
       label = _outputs![0]['label'];
       print(_outputs);
     });
@@ -187,6 +189,9 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              const SizedBox(
+                height: 30,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -197,12 +202,12 @@ class _HomePageState extends State<HomePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                     ),
-                    icon: Icon(
+                    icon: const Icon(
                       // <-- Icon
                       Icons.photo_camera,
                       size: 30,
                     ),
-                    label: Text('Camera'), // <-- Text
+                    label: const Text('Camera'), // <-- Text
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
@@ -211,19 +216,19 @@ class _HomePageState extends State<HomePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                     ),
-                    icon: Icon(
+                    icon: const Icon(
                       // <-- Icon
                       Icons.photo,
                       size: 30,
                     ),
-                    label: Text('Gallery'), // <-- Text
+                    label: const Text('Gallery'), // <-- Text
                   ),
                 ],
               ),
               _loading
-                  ? Container(
+                  ? SizedBox(
                       height: MediaQuery.of(context).size.height * .9,
-                      child: Center(
+                      child: const Center(
                         child: Text(
                           'Select an image...',
                           style: TextStyle(
@@ -234,9 +239,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   : Center(
-                      child: Container(
+                      child: SizedBox(
                         width: MediaQuery.of(context).size.width * .8,
-                        height: MediaQuery.of(context).size.height * .76,
+                        height: MediaQuery.of(context).size.height * 1,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -252,11 +257,11 @@ class _HomePageState extends State<HomePage> {
                                             MediaQuery.of(context).size.height *
                                                 .6),
                                   ),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
                             _image == null
                                 ? Container(
                                     color: Colors.black,
-                                    child: Text(
+                                    child: const Text(
                                       'No image selected',
                                       style: TextStyle(
                                           fontSize: 25,
@@ -267,24 +272,34 @@ class _HomePageState extends State<HomePage> {
                                 : _outputs != null
                                     ? Card(
                                         color: Colors.black54,
-                                        margin: EdgeInsets.all(8),
+                                        margin: const EdgeInsets.all(8),
                                         elevation: 10,
                                         child: Column(
                                           children: [
-                                            SizedBox(
+                                            Container(
                                               width: MediaQuery.of(context)
                                                       .size
                                                       .width *
-                                                  .8,
-                                              child: Text(
-                                                _outputs![0]["label"]
-                                                    .substring(1),
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 30,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                textAlign: TextAlign.center,
+                                                  .9,
+                                              child: Column(
+                                                children: [
+                                                  Text(
+                                                    _outputs![0]["label"]
+                                                            .substring(1) +
+                                                        "\n" +
+                                                        _outputs![0]
+                                                                ["confidence"]
+                                                            .toString()
+                                                            .substring(0, 5),
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 30,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                             ElevatedButton.icon(
@@ -294,12 +309,13 @@ class _HomePageState extends State<HomePage> {
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.black,
                                               ),
-                                              icon: Icon(
+                                              icon: const Icon(
                                                 // <-- Icon
                                                 Icons.upload_sharp,
-                                                size: 30,
+                                                size: 40,
                                               ),
-                                              label: Text('Upload'), // <-- Text
+                                              label: const Text(
+                                                  'Upload'), // <-- Text
                                             ),
                                           ],
                                         ),

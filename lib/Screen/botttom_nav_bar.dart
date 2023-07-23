@@ -1,8 +1,7 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:detection/Screen/Login.dart';
 import 'package:detection/Screen/RatingPage.dart';
+import 'package:detection/Screen/crystal.dart';
 import 'package:detection/Screen/currentLocation.dart';
 import 'package:detection/Screen/home.dart';
 import 'package:detection/Screen/homepage.dart';
@@ -15,6 +14,7 @@ import 'package:fade_scroll_app_bar/fade_scroll_app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Bottom_Nav_Bar extends StatefulWidget {
   const Bottom_Nav_Bar({Key? key}) : super(key: key);
@@ -29,6 +29,7 @@ class _Bottom_Nav_BarState extends State<Bottom_Nav_Bar> {
   dynamic url;
   dynamic emaill;
   var check = false;
+  var auth, user;
   Map<String, dynamic> data = {
     'image':
         'https://365webresources.com/wp-content/uploads/2016/09/FREE-PROFILE-AVATARS.png',
@@ -64,159 +65,217 @@ class _Bottom_Nav_BarState extends State<Bottom_Nav_Bar> {
     }
   }
 
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Perform any additional logout operations or navigations
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      await preferences.setBool("login", false);
+    } catch (e) {
+      print('Error occurred during logout: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     fetchDocumentFromFirestore();
+    auth = FirebaseAuth.instance;
+    user = auth.currentUser;
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    // TODO: implement setState
+    super.setState(fn);
   }
 
   final ScrollController _scrollController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Fade Scroll App Bar',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Scaffold(
-        body: FadeScrollAppBar(
-          scrollController: _scrollController,
-          appBarLeading: const Icon(Icons.motorcycle),
-          appBarTitle: const Text('Helmet Detection App'),
-          appBarForegroundColor: Colors.black,
-          pinned: true,
-          fadeOffset: 120,
-          expandedHeight: 250,
-          backgroundColor: Colors.white,
-          fadeWidget: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: data['image'] != null
-                    ? CircleAvatar(
-                        radius: 70,
-                        backgroundImage: NetworkImage('${data['image']}'),
-                      )
-                    : Container(
-                        child: const CircularProgressIndicator(),
-                      ),
-              ),
-            ],
-          ),
-          bottomWidgetHeight: 40,
-          bottomWidget: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Chip(
-                label:
-                    Text("$name", style: const TextStyle(color: Colors.white)),
-                backgroundColor: Colors.blue,
-                side: const BorderSide(
-                  color: Colors.white,
-                  width: 1,
+    if (user != null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Fade Scroll App Bar',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: Scaffold(
+          body: FadeScrollAppBar(
+            scrollController: _scrollController,
+            appBarLeading: const Icon(Icons.motorcycle),
+            appBarTitle: const Text('Helmet Detection App'),
+            appBarForegroundColor: Colors.black,
+            pinned: true,
+            fadeOffset: 120,
+            expandedHeight: 250,
+            backgroundColor: Colors.white,
+            fadeWidget: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: data['image'] != null
+                      ? CircleAvatar(
+                          radius: 70,
+                          backgroundImage: NetworkImage('${data['image']}'),
+                        )
+                      : Container(
+                          child: const CircularProgressIndicator(),
+                        ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Chip(
-                label: Text(
-                  "$emaill",
-                  style: const TextStyle(color: Colors.white),
+              ],
+            ),
+            bottomWidgetHeight: 40,
+            bottomWidget: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Chip(
+                  label: Text("$name",
+                      style: const TextStyle(color: Colors.white)),
+                  backgroundColor: Colors.blue,
+                  side: const BorderSide(
+                    color: Colors.white,
+                    width: 1,
+                  ),
                 ),
-                backgroundColor: Colors.blue,
-                side: const BorderSide(
-                  color: Colors.white,
-                  width: 1,
+                const SizedBox(width: 10),
+                Chip(
+                  label: Text(
+                    "$emaill",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.blue,
+                  side: const BorderSide(
+                    color: Colors.white,
+                    width: 1,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          child: ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const Status()));
-                      },
-                      child: const CardWithIcon(
-                        icon: Icons.home,
-                        label: 'Home',
+              ],
+            ),
+            child: ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const Status()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.home,
+                          label: 'Home',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16.0),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => HomePage()));
-                      },
-                      child: const CardWithIcon(
-                        icon: Icons.search,
-                        label: 'Helmet Detect',
+                    const SizedBox(width: 16.0),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => HomePage()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.search,
+                          label: 'Helmet Detect',
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16.0),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const Location()));
-                      },
-                      child: const CardWithIcon(
-                        icon: Icons.location_on,
-                        label: 'Location',
+                  ],
+                ),
+                const SizedBox(height: 16.0),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const Location()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.location_on,
+                          label: 'Location',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16.0),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const Video()));
-                      },
-                      child: const CardWithIcon(
-                        icon: Icons.video_collection_rounded,
-                        label: 'Video',
+                    const SizedBox(width: 16.0),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const Video()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.video_collection_rounded,
+                          label: 'Video',
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16.0),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const RatingPage()));
-                      },
-                      child: const CardWithIcon(
-                        icon: Icons.star_rate_outlined,
-                        label: 'Rate Our App',
+                  ],
+                ),
+                const SizedBox(height: 16.0),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const RatingPage()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.star_rate_outlined,
+                          label: 'Rate Our App',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16.0),
-                ],
-              ),
-            ],
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => Crystal()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.description_outlined,
+                          label: 'crystal Report',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16.0),
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          _logout();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const Login()), // Replace with your desired route
+                            (Route<dynamic> route) =>
+                                false, // Remove all previous routes from the stack
+                          );
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.logout_rounded,
+                          label: 'Log Out',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16.0),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      return const Login();
+    }
   }
 }
 

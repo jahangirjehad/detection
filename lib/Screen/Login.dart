@@ -1,3 +1,4 @@
+import 'package:detection/Screen/animated_page.dart';
 import 'package:detection/Screen/botttom_nav_bar.dart';
 import 'package:detection/Screen/homepage.dart';
 import 'package:detection/Screen/register.dart';
@@ -5,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -14,8 +16,15 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _rememberMe = false;
+
+  Future loginPersistence() async {
+    SharedPreferences userData = await SharedPreferences.getInstance();
+    userData.setBool("login", _rememberMe);
+  }
 
   signIn() async {
     try {
@@ -23,10 +32,11 @@ class _LoginState extends State<Login> {
           .signInWithEmailAndPassword(
               email: _emailController.text, password: _passwordController.text);
       var authCredential = userCredential.user;
-      print(authCredential!.uid);
-      if (authCredential.uid.isNotEmpty) {
+      //print(authCredential!.uid);
+      if (authCredential!.uid.isNotEmpty) {
+        loginPersistence();
         Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => Bottom_Nav_Bar()));
+            .push(MaterialPageRoute(builder: (context) => const Animationn()));
       } else {
         Fluttertoast.showToast(msg: "Something is wrong");
       }
@@ -37,7 +47,7 @@ class _LoginState extends State<Login> {
         Fluttertoast.showToast(msg: "Wrong password provided for that user.");
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
   }
 
@@ -95,6 +105,24 @@ class _LoginState extends State<Login> {
                   height: 40,
                 ),
                 Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      checkColor: Colors.white,
+                      activeColor: Colors.green,
+                      onChanged: (value) {
+                        setState(() {
+                          _rememberMe = value!;
+                        });
+                      },
+                    ),
+                    const Text(
+                      'remember me',
+                      style: TextStyle(fontSize: 20),
+                    )
+                  ],
+                ),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
@@ -127,7 +155,7 @@ class _LoginState extends State<Login> {
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => Register()));
+                              builder: (context) => const Register()));
                         },
                         child: const Text(
                           'Sign Up',

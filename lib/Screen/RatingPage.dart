@@ -14,6 +14,7 @@ class _RatingPageState extends State<RatingPage> {
   var _rating;
   late double avgerageRate;
   bool isLoading = true;
+  @override
   void initState() {
     super.initState();
     avgRate();
