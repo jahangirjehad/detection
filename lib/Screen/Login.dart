@@ -56,7 +56,7 @@ class _LoginState extends State<Login> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-            image: AssetImage('assets/login.png'), fit: BoxFit.cover),
+            image: AssetImage('assets/register.png'), fit: BoxFit.cover),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -64,7 +64,7 @@ class _LoginState extends State<Login> {
           Container(
             padding: const EdgeInsets.only(left: 35, top: 80),
             child: const Text(
-              "Helmet Detection\nApplication",
+              "Helmet Detection",
               style: TextStyle(color: Colors.white, fontSize: 33),
             ),
           ),

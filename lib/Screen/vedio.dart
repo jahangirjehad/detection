@@ -9,14 +9,9 @@ class Video extends StatefulWidget {
 }
 
 class _VideoState extends State<Video> {
-  static String myVideoId = 'PQSagzssvUQ';
-  // the full url: https://www.youtube.com/watch?v=PQSagzssvUQ&ab_channel=NASA
-  // it's an interesting video from NASA on Youtube
-
-  // Initiate the Youtube player controller
-  YoutubePlayerController _controller = YoutubePlayerController(
-    initialVideoId: 'iLnmTe5Q2Qw',
-    flags: YoutubePlayerFlags(
+  final YoutubePlayerController _controller = YoutubePlayerController(
+    initialVideoId: 'aaNipNmnv4c',
+    flags: const YoutubePlayerFlags(
       autoPlay: false,
       mute: false,
     ),
@@ -26,7 +21,7 @@ class _VideoState extends State<Video> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter and Youtube'),
+        title: const Text('Helmet Detection'),
       ),
       body: YoutubePlayer(
         controller: _controller,

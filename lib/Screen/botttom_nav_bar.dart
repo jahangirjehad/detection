@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:detection/API/apiscreen.dart';
 import 'package:detection/Screen/Login.dart';
 import 'package:detection/Screen/RatingPage.dart';
 import 'package:detection/Screen/crystal.dart';
@@ -265,7 +266,19 @@ class _Bottom_Nav_BarState extends State<Bottom_Nav_Bar> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16.0),
+                    //const SizedBox(width: 16.0),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const APIscreen()));
+                        },
+                        child: const CardWithIcon(
+                          icon: Icons.sunny,
+                          label: 'Weather',
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -284,6 +297,7 @@ class CardWithIcon extends StatelessWidget {
   final String label;
 
   const CardWithIcon({
+    super.key,
     required this.icon,
     required this.label,
   });

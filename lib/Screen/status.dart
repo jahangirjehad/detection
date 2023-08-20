@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:detection/Screen/botttom_nav_bar.dart';
 import 'package:detection/Screen/comment-section.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -24,9 +25,40 @@ class _StatusState extends State<Status> {
   var totalPage = 4;
   var limit = 2;
   dynamic start, end;
+  dynamic next = true;
+  Map<String, dynamic> data = {
+    'image':
+        'https://365webresources.com/wp-content/uploads/2016/09/FREE-PROFILE-AVATARS.png',
+  };
+  Future<void> fetchDocumentFromFirestore() async {
+    try {
+      final auth = FirebaseAuth.instance.currentUser;
+      final email = auth!.email;
+      DocumentSnapshot documentSnapshot =
+          await FirebaseFirestore.instance.collection('users').doc(email).get();
+
+      // Check if the document exists
+      if (documentSnapshot.exists) {
+        // Access the document data
+        setState(() {
+          data = documentSnapshot.data() as Map<String, dynamic>;
+        });
+
+        //print("data = ");
+        //print(image);
+      } else {
+        // Handle case when the document doesn't exist
+        //print('Document does not exist');
+      }
+    } catch (e) {
+      // Handle any errors that occurred during document retrieval
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    fetchDocumentFromFirestore();
 
     // Set the initial state of the widget here
     start = limit * currentPage - limit;
@@ -56,6 +88,7 @@ class _StatusState extends State<Status> {
       'likes': 0,
       'comments': 0,
       "likeBy": [],
+      "profile": data['image']
     });
 
     // Clear the input fields
@@ -97,8 +130,12 @@ class _StatusState extends State<Status> {
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState == ConnectionState.waiting && next) {
+            //print('waiting');
+            next = false;
+            return const Center(
+              child: Text('Loading...'),
+            );
           }
           final List<QueryDocumentSnapshot> documents = snapshot.data!.docs;
           var h = MediaQuery.of(context).size.height;
@@ -106,6 +143,8 @@ class _StatusState extends State<Status> {
           totalPage = documents.length;
           totalPage = (totalPage / limit).ceil();
           //print("len = ${documents.length}");
+          print('image file = $_imageFile');
+          print('$start $end');
 
           return ListView(
             children: [
@@ -117,21 +156,34 @@ class _StatusState extends State<Status> {
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        FractionallySizedBox(
-                          widthFactor:
-                              0.8, // Adjust the fraction as needed (e.g., 0.8 for 80% of available width)
-                          child: SizedBox(
-                            height: 150, // Set the desired height
-                            child: TextField(
-                              controller: _textEditingController,
-                              decoration: const InputDecoration(
-                                hintText: 'What\'s on your mind?',
-                                border: InputBorder.none,
-                              ),
-                              maxLines: null,
+                        data['image'] != null
+                            ? CircleAvatar(
+                                radius: 70,
+                                backgroundImage:
+                                    NetworkImage('${data['image']}'),
+                              )
+                            : Container(),
+                        SizedBox(
+                          height: 150, // Set the desired height
+                          child: TextField(
+                            controller: _textEditingController,
+                            decoration: const InputDecoration(
+                              hintText: 'What\'s on your mind?',
+                              border: InputBorder.none,
                             ),
+                            maxLines: null,
                           ),
                         ),
+                        _imageFile != null
+                            ? Card(
+                                color: Colors.black,
+                                elevation: 45,
+                                child: Image.file(_imageFile!,
+                                    fit: BoxFit.cover,
+                                    height: MediaQuery.of(context).size.height *
+                                        .6),
+                              )
+                            : Container(),
                         const Divider(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -142,19 +194,10 @@ class _StatusState extends State<Status> {
                             ),
                             ElevatedButton(
                               onPressed: _uploadStatus,
-                              child: const Text('Post Status'),
+                              child: const Text('Share'),
                             ),
                           ],
                         ),
-                        if (_imageFile != null)
-                          SizedBox(
-                            height: 200,
-                            child: Image.file(
-                              _imageFile!,
-                              height: 200,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -165,40 +208,11 @@ class _StatusState extends State<Status> {
                   margin: const EdgeInsets.all(8.0),
                   child: _buildStatusCard(documents[index]),
                 ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black),
-                    ),
-                    child: TextButton(
-                      onPressed: () {
-                        // Add your function for previous button here
-                        currentPage != 1
-                            ? setState(() {
-                                currentPage = currentPage - 1;
-                                start = limit * currentPage - limit;
-                                end = start + limit;
-                              })
-                            : setState(() {});
-                      },
-                      child: Text(
-                        'Prev',
-                        style: currentPage == 1
-                            ? const TextStyle(color: Colors.grey)
-                            : const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  for (int i = 1; i <= totalPage; i++)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Container(
                       width: 50,
                       height: 50,
@@ -209,55 +223,87 @@ class _StatusState extends State<Status> {
                       ),
                       child: TextButton(
                         onPressed: () {
-                          // Add your function for page 1 button here
-                          setState(() {
-                            currentPage = i;
-                            start = limit * currentPage - limit;
-                            end = start + limit;
-                          });
+                          // Add your function for previous button here
+                          currentPage != 1
+                              ? setState(() {
+                                  currentPage = currentPage - 1;
+                                  start = limit * currentPage - limit;
+                                  end = start + limit;
+                                })
+                              : setState(() {});
                         },
                         child: Text(
-                          '$i',
-                          style: currentPage == i
-                              ? const TextStyle(
+                          'Prev',
+                          style: currentPage == 1
+                              ? const TextStyle(color: Colors.grey)
+                              : const TextStyle(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold)
-                              : const TextStyle(color: Colors.grey),
+                                  fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
-                  const SizedBox(width: 10),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black),
-                    ),
-                    child: TextButton(
-                      onPressed: () {
-                        // Add your function for next button here
-                        currentPage != 4
-                            ? setState(() {
-                                currentPage = currentPage + 1;
-                                start = limit * currentPage - limit;
-                                end = start + limit;
-                              })
-                            : setState(() {});
-                      },
-                      child: Text(
-                        'Next',
-                        style: currentPage == 4
-                            ? const TextStyle(color: Colors.grey)
-                            : const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                    const SizedBox(width: 10),
+                    for (int i = 1; i <= totalPage; i++)
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.black),
+                        ),
+                        child: TextButton(
+                          onPressed: () {
+                            // Add your function for page 1 button here
+                            setState(() {
+                              currentPage = i;
+                              start = limit * currentPage - limit;
+                              end = start + limit;
+                            });
+                          },
+                          child: Text(
+                            '$i',
+                            style: currentPage == i
+                                ? const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)
+                                : const TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 10),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.black),
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          // Add your function for next button here
+                          currentPage != totalPage
+                              ? setState(() {
+                                  currentPage = currentPage + 1;
+                                  start = limit * currentPage - limit;
+                                  end = start + limit;
+                                })
+                              : "";
+                        },
+                        child: Text(
+                          'Next',
+                          style: currentPage == totalPage
+                              ? const TextStyle(color: Colors.grey)
+                              : const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 10),
             ],
@@ -274,6 +320,7 @@ class _StatusState extends State<Status> {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     var user = _auth.currentUser;
     final isLiked = likedBy?.contains(user!.email) ?? false;
+    print(status['image']);
 
     return Card(
       child: Column(
@@ -282,34 +329,61 @@ class _StatusState extends State<Status> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${status['postBy']}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                DateFormat('dd MMM, yyyy HH:mm')
-                    .format(status['timestamp'].toDate()),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+              Container(
+                margin: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    status['profile'] != null
+                        ? CircleAvatar(
+                            radius: MediaQuery.of(context).size.width * .05,
+                            backgroundImage:
+                                NetworkImage('${status['profile']}'),
+                          )
+                        : const CircularProgressIndicator(),
+                    Container(
+                      margin: const EdgeInsets.all(10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${status['postBy']}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('dd MMM, yyyy HH:mm')
+                                .format(status['timestamp'].toDate()),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(
                 height: 10,
               ),
-              Text(
-                status['text'],
-                style: const TextStyle(fontSize: 16),
+              Container(
+                margin: const EdgeInsets.all(10),
+                child: Text(
+                  status['text'],
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),
           Container(
-            child:
-                status['image'] != null ? Image.network(status['image']) : null,
+            child: status['image'] != null
+                ? Image.network(status['image'])
+                : Container(),
           ),
           const Divider(
             color: Colors.grey,
